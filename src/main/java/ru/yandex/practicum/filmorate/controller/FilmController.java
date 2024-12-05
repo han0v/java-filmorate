@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -12,11 +12,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private static final Logger log = LoggerFactory.getLogger(FilmController.class); // Логгер для класса
     private final Map<Long, Film> films = new HashMap<>();
+    private static final int DESCRIPTION_LENGTH = 200;
+    public static final LocalDate RELEASE_DATE = LocalDate.of(1895, 12, 28);
+
+    //не стал реализовывать абстрактный класс ибо поучилось некрасиво и не особо полезно
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -24,7 +28,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         try {
             validateFilm(film);
             film.setId(getNextId());
@@ -33,7 +37,7 @@ public class FilmController {
             return film;
         } catch (ValidationException e) {
             log.error("Ошибка валидации при создании фильма: {}", e.getMessage());
-            throw e; // Пробрасываем исключение дальше
+            throw e;
         }
     }
 
@@ -44,7 +48,6 @@ public class FilmController {
             throw new ValidationException("Id должен быть указан");
         }
 
-        // Проверяем, есть ли фильм с таким ID
         if (films.containsKey(newFilm.getId())) {
             Film oldFilm = films.get(newFilm.getId());
             try {
@@ -60,7 +63,7 @@ public class FilmController {
                 return oldFilm;
             } catch (ValidationException e) {
                 log.error("Ошибка валидации при обновлении фильма с id = {}: {}", newFilm.getId(), e.getMessage());
-                throw e; // Пробрасываем исключение дальше
+                throw e;
             }
         }
 
@@ -68,17 +71,16 @@ public class FilmController {
         throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
     }
 
-    // Метод для валидации фильма
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Ошибка валидации: Название не может быть пустым");
             throw new ValidationException("Название не может быть пустым");
         }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
+        if (film.getDescription() != null && film.getDescription().length() > DESCRIPTION_LENGTH) {
             log.error("Ошибка валидации: Описание не может быть больше 200 символов");
             throw new ValidationException("Описание не может быть больше 200 символов");
         }
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(RELEASE_DATE)) {
             log.error("Ошибка валидации: Дата релиза не может быть до 28 декабря 1895 года");
             throw new ValidationException("Дата релиза не может быть до 28 декабря 1895 года");
         }
@@ -88,7 +90,6 @@ public class FilmController {
         }
     }
 
-    // Вспомогательный метод для генерации идентификатора нового фильма
     private long getNextId() {
         return films.keySet().stream()
                 .mapToLong(id -> id)

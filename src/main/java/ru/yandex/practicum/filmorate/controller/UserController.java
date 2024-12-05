@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -12,10 +12,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private static final Logger log = LoggerFactory.getLogger(UserController.class); // Логгер для класса
     private final Map<Long, User> users = new HashMap<>();
     private long currentId = 1;
 
@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
+    public User create(@Valid @RequestBody User user) {
         try {
             validateUser(user);
 
@@ -38,7 +38,7 @@ public class UserController {
             return user;
         } catch (ValidationException e) {
             log.error("Ошибка валидации при создании пользователя: {}", e.getMessage());
-            throw e; // Пробрасываем исключение дальше
+            throw e;
         }
     }
 
@@ -68,7 +68,7 @@ public class UserController {
                 return existingUser;
             } catch (ValidationException e) {
                 log.error("Ошибка валидации при обновлении пользователя с id = {}: {}", newUser.getId(), e.getMessage());
-                throw e; // Пробрасываем исключение дальше
+                throw e;
             }
         }
 
@@ -76,7 +76,6 @@ public class UserController {
         throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
-    // Метод для валидации пользователя
     private void validateUser(User user) {
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             log.error("Некорректный email: {}", user.getEmail());
