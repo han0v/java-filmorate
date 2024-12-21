@@ -20,10 +20,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleAllExceptions(Exception e) {
+    @ExceptionHandler(Throwable.class) // Ловим все исключения
+    public ResponseEntity<Map<String, String>> handleAllExceptions(Throwable e) {
         Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("error", e.getMessage());
+        responseBody.put("error", "Произошла непредвиденная ошибка: " + e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
     }
 

@@ -5,11 +5,13 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    private final Map<Long, Set<Long>> friends = new HashMap<>();
+    private final Map<Long, Set<Long>> friends = new HashMap<>(); /*Нам на вебинаре наставник сказал что такая реализация
+    вполне подходит, поэтому чтобы не создавать лишних затруднений откажусь от данной модификации */
     private long currentId = 1;
 
     @Override
@@ -70,14 +72,10 @@ public class InMemoryUserStorage implements UserStorage {
         Set<Long> commonFriendIds = new HashSet<>(friendsUser1);
         commonFriendIds.retainAll(friendsUser2);
 
-        List<User> commonFriends = new ArrayList<>();
-        for (Long friendId : commonFriendIds) {
-            User friendUser = users.get(friendId);
-            if (friendUser != null) {
-                commonFriends.add(friendUser);
-            }
-        }
-        return commonFriends;
+        return commonFriendIds.stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 
@@ -88,15 +86,10 @@ public class InMemoryUserStorage implements UserStorage {
         }
         Set<Long> friendIds = friends.getOrDefault(userId, Collections.emptySet());
 
-        // Получаем полные объекты User из идентификаторов друзей
-        List<User> friendUsers = new ArrayList<>();
-        for (Long friendId : friendIds) {
-            User friendUser = users.get(friendId);
-            if (friendUser != null) {
-                friendUsers.add(friendUser);
-            }
-        }
-        return friendUsers;
+        return friendIds.stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 }

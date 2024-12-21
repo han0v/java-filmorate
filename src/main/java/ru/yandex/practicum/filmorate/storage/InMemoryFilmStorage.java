@@ -10,7 +10,8 @@ import java.util.stream.Collectors;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
-    private final Map<Long, Set<Long>> likes = new HashMap<>();
+    private final Map<Long, Set<Long>> likes = new HashMap<>(); /*Нам на вебинаре наставник сказал что такая реализация
+    вполне подходит, поэтому чтобы не создавать лишних затруднений откажусь от данной модификации */
     private long currentId = 1;
 
     @Override
@@ -59,12 +60,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Film> getTop10Films(int count) {
         List<Film> sortedFilms = new ArrayList<>(getAllFilms());
-
-        // Сортировка фильмов по количеству лайков в порядке убывания
         sortedFilms.sort((film1, film2) -> {
             int likes1 = likes.getOrDefault(film1.getId(), Collections.emptySet()).size();
             int likes2 = likes.getOrDefault(film2.getId(), Collections.emptySet()).size();
-            return Integer.compare(likes2, likes1); // Сортировка по убыванию
+            return Integer.compare(likes2, likes1);
         });
 
         // Возвращаем топ 10 фильмов или меньше, если их меньше 10
