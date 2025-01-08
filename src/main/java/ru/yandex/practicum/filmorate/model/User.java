@@ -11,4 +11,10 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
+    private FriendshipStatus friendshipStatus;
+
+    enum FriendshipStatus {
+        PENDING,
+        CONFIRMED
+    }
 }

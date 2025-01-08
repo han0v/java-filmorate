@@ -10,8 +10,7 @@ import java.util.stream.Collectors;
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    private final Map<Long, Set<Long>> friends = new HashMap<>(); /*Нам на вебинаре наставник сказал что такая реализация
-    вполне подходит, поэтому чтобы не создавать лишних затруднений откажусь от данной модификации */
+    private final Map<Long, Set<Long>> friends = new HashMap<>();
     private long currentId = 1;
 
     @Override
