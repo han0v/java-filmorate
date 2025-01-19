@@ -24,12 +24,9 @@ public class LikeController {
     @PutMapping("/{filmId}/like/{userId}")
     public ResponseEntity<Void> addLike(@PathVariable Long filmId, @PathVariable Long userId) {
         log.info("Пользователь с id = {} ставит лайк фильму с id = {}", userId, filmId);
-        if (filmService.getFilmById(filmId) == null) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден.");
-        }
-        if (userService.getUserById(userId) == null) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден.");
-        }
+
+        validateFilmAndUser(filmId, userId);
+
         filmService.addLike(filmId, userId);
         return ResponseEntity.ok().build();
     }
@@ -37,13 +34,21 @@ public class LikeController {
     @DeleteMapping("/{filmId}/like/{userId}")
     public ResponseEntity<Void> removeLike(@PathVariable Long filmId, @PathVariable Long userId) {
         log.info("Пользователь с id = {} удаляет лайк к фильму с id = {}", userId, filmId);
+
+        validateFilmAndUser(filmId, userId);
+
+        filmService.removeLike(filmId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    private void validateFilmAndUser(Long filmId, Long userId) {
         if (filmService.getFilmById(filmId) == null) {
+            log.error("Ошибка валидации: Фильм с id = {} не найден.", filmId);
             throw new NotFoundException("Фильм с id = " + filmId + " не найден.");
         }
         if (userService.getUserById(userId) == null) {
+            log.error("Ошибка валидации: Пользователь с id = {} не найден.", userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден.");
         }
-        filmService.removeLike(filmId, userId);
-        return ResponseEntity.ok().build();
     }
 }

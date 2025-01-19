@@ -15,17 +15,3 @@ FROM film;
 SELECT *
 FROM user;
 ```
-**Получение фильма по жанру**
-```sql
-SELECT f.rating
-FROM films f
-JOIN rating r ON f.film_id = r.rating_id 
-WHERE g.rating = 'R';
-```
-**Получение фильма по жанру:**
-```sql
-SELECT f.genre 
-FROM films f
-JOIN genres g ON f.film_id = g.genre_id 
-WHERE g.genre = 'Комедия';
-```
