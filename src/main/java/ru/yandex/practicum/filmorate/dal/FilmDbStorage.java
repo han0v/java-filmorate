@@ -45,13 +45,22 @@ public class FilmDbStorage implements FilmStorage {
             Long filmId = jdbcOperations.queryForObject("SELECT MAX(film_id) FROM film", params, Long.class);
             film.setId(filmId);
 
-            if (film.getGenres() != null) {
+            if (film.getGenres() != null && !film.getGenres().isEmpty()) {
                 Set<Genre> uniqueGenres = new HashSet<>(film.getGenres());
-                film.setGenres(new ArrayList<>(uniqueGenres));
+                List<Genre> uniqueGenreList = new ArrayList<>(uniqueGenres);
 
-                for (Genre genre : film.getGenres()) {
-                    addFilmGenre(filmId, genre.getId());
+                String sqlInsert = "INSERT INTO film_genre (film_id, genre_id) VALUES (:filmId, :genreId)";
+                List<Map<String, Object>> batchValues = new ArrayList<>();
+
+                for (Genre genre : uniqueGenreList) {
+                    Map<String, Object> genreParams = new HashMap<>();
+                    genreParams.put("filmId", filmId);
+                    genreParams.put("genreId", genre.getId());
+                    batchValues.add(genreParams);
                 }
+
+                // Выполняем пакетную вставку
+                jdbcOperations.batchUpdate(sqlInsert, batchValues.toArray(new Map[0]));
             }
 
             return film;
@@ -72,20 +81,20 @@ public class FilmDbStorage implements FilmStorage {
         params.put("description", film.getDescription());
         params.put("releaseDate", film.getReleaseDate());
         params.put("duration", film.getDuration());
-        params.put("ratingId", film.getMpa().getId());  // Изменено с film.getRatingId() на film.getMpa().getId()
+        params.put("ratingId", film.getMpa().getId());
         params.put("filmId", film.getId());
 
         jdbcOperations.update(sql, params);
-        updateFilmGenres(film.getId(), film.getGenres());  // Обновляем жанры
+        updateFilmGenres(film.getId(), film.getGenres());
 
         return film;
     }
 
     @Override
     public Collection<Film> getAllFilms() {
-        String sql = "SELECT f.*, mr.rating_mpa " +  // Добавляем поле rating_mpa
+        String sql = "SELECT f.*, mr.rating_mpa " +
                 "FROM film f " +
-                "JOIN mpa_rating mr ON f.rating_id = mr.rating_id";  // JOIN с таблицей mpa_rating
+                "JOIN mpa_rating mr ON f.rating_id = mr.rating_id";
         return jdbcOperations.query(sql, filmRowMapper);
     }
 
@@ -118,7 +127,7 @@ public class FilmDbStorage implements FilmStorage {
 
         try {
             Film film = jdbcOperations.queryForObject(sql, params, filmRowMapper);
-            film.setGenres(getGenresForFilm(filmId));  // Получаем жанры с именами
+            film.setGenres(getGenresForFilm(filmId));
             return film;
         } catch (EmptyResultDataAccessException e) {
             log.info("Фильм с id = {} не найден", filmId);
@@ -126,9 +135,8 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-
     @Override
-    public List<Film> getTop10Films(int count) {
+    public List<Film> getTopFilms(int count) {
         String sql = "SELECT film_id FROM film ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = film.film_id) DESC LIMIT :count";
         Map<String, Object> params = new HashMap<>();
         params.put("count", count);
@@ -137,15 +145,7 @@ public class FilmDbStorage implements FilmStorage {
 
         return topFilmIds.stream()
                 .map(this::getFilmById)
-                .toList(); // Преобразуем идентификаторы в объекты Film
-    }
-
-    private void addFilmGenre(Long filmId, Long genreId) {
-        String sql = "INSERT INTO film_genre (film_id, genre_id) VALUES (:filmId, :genreId)";
-        Map<String, Object> params = new HashMap<>();
-        params.put("filmId", filmId);
-        params.put("genreId", genreId);
-        jdbcOperations.update(sql, params);
+                .toList();
     }
 
     private void updateFilmGenres(Long filmId, List<Genre> genres) {
@@ -154,10 +154,21 @@ public class FilmDbStorage implements FilmStorage {
         params.put("filmId", filmId);
         jdbcOperations.update(sqlDelete, params);
 
-        if (genres != null) {
-            for (Genre genre : genres) {
-                addFilmGenre(filmId, genre.getId());
+        if (genres != null && !genres.isEmpty()) {
+            Set<Genre> uniqueGenres = new HashSet<>(genres);
+            List<Genre> uniqueGenreList = new ArrayList<>(uniqueGenres);
+
+            String sqlInsert = "INSERT INTO film_genre (film_id, genre_id) VALUES (:filmId, :genreId)";
+            List<Map<String, Object>> batchValues = new ArrayList<>();
+
+            for (Genre genre : uniqueGenreList) {
+                Map<String, Object> genreParams = new HashMap<>();
+                genreParams.put("filmId", filmId);
+                genreParams.put("genreId", genre.getId());
+                batchValues.add(genreParams);
             }
+
+            jdbcOperations.batchUpdate(sqlInsert, batchValues.toArray(new Map[0]));
         }
     }
 

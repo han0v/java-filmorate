@@ -36,7 +36,7 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(int count) {
-        return filmStorage.getTop10Films(count);
+        return filmStorage.getTopFilms(count);
     }
 
     public Film getFilmById(Long filmId) {

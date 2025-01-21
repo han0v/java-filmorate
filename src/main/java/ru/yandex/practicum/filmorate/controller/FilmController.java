@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,6 +27,9 @@ public class FilmController {
     private final FilmService filmService;
     private static final int DESCRIPTION_LENGTH = 200;
     public static final LocalDate RELEASE_DATE = LocalDate.of(1895, 12, 28);
+
+    // Статический набор допустимых идентификаторов жанров
+    private static final Set<Long> VALID_GENRE_IDS = Set.of(1L, 2L, 3L, 4L, 5L, 6L); // Пример допустимых ID жанров
 
     @GetMapping
     public ResponseEntity<Collection<FilmDto>> findAll() {
@@ -43,7 +48,7 @@ public class FilmController {
         validateFilm(film);
         Film createdFilm = filmService.addFilm(film);
         FilmDto createdFilmDto = FilmMapper.toFilmDto(createdFilm);
-        return ResponseEntity.ok(createdFilmDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdFilmDto);
     }
 
     @PutMapping
@@ -107,7 +112,7 @@ public class FilmController {
         }
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
-                if (genre.getId() > 6) {
+                if (!VALID_GENRE_IDS.contains(genre.getId())) {
                     log.error("Ошибка валидации: Жанра с id {} не существует", genre.getId());
                     throw new ValidationException("Жанр с id " + genre.getId() + " не существует");
                 }
