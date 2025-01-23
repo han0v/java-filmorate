@@ -1,56 +1,74 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
     @GetMapping
-    public Collection<User> findAll() {
+    public ResponseEntity<Collection<UserDto>> findAll() {
         log.info("Запрос на получение всех пользователей");
-        return userService.getAllUsers();
+        Collection<User> users = userService.getAllUsers();
+        Collection<UserDto> userDtos = users.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(userDtos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id) {
-        User user = userService.getUserById(id);
+    public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
         log.info("Запрос на получение пользователя с id = {}", id);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        User user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        UserDto userDto = UserMapper.toUserDto(user);
+        return ResponseEntity.ok(userDto);
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        log.info("Создание нового пользователя: {}", user);
+    public ResponseEntity<UserDto> create(@RequestBody UserDto userDto) {
+        log.info("Создание нового пользователя: {}", userDto);
+        User user = UserMapper.toUser(userDto);
         validateUser(user);
         User createdUser = userService.addUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser).getBody();
+        UserDto createdUserDto = UserMapper.toUserDto(createdUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto);
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
-        log.info("Обновление пользователя с id = {}", user.getId());
-        return userService.updateUser(user);
+    public ResponseEntity<UserDto> update(@RequestBody UserDto userDto) {
+        log.info("Обновление пользователя с id = {}", userDto.getId());
+        User user = UserMapper.toUser(userDto);
+        if (userService.getUserById(user.getId()) == null) {
+            throw new IllegalArgumentException("Пользователь с id = " + user.getId() + " не найден.");
+        }
+        validateUser(user);
+        User updatedUser = userService.updateUser(user);
+        UserDto updatedUserDto = UserMapper.toUserDto(updatedUser);
+        return ResponseEntity.ok(updatedUserDto);
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public ResponseEntity<List<User>> addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+    public ResponseEntity<List<UserDto>> addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Пользователь с id = {} стал другом пользователя с id = {}", userId, friendId);
         if (userService.getUserById(userId) == null) {
             throw new IllegalArgumentException("Пользователь с id = " + userId + " не найден.");
@@ -58,12 +76,13 @@ public class UserController {
         if (userService.getUserById(friendId) == null) {
             throw new IllegalArgumentException("Пользователь с id = " + friendId + " не найден.");
         }
-
         userService.addFriend(userId, friendId);
         List<User> friends = userService.getFriends(userId);
-        return ResponseEntity.ok(friends);
+        List<UserDto> friendDtos = friends.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(friendDtos);
     }
-
 
     @DeleteMapping("/{userId}/friends/{friendId}")
     public ResponseEntity<Void> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
@@ -74,26 +93,34 @@ public class UserController {
         if (userService.getUserById(friendId) == null) {
             throw new IllegalArgumentException("Пользователь с id = " + friendId + " не найден.");
         }
+        validateUserId(userId);
+        validateUserId(friendId);
         userService.removeFriend(userId, friendId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}/friends")
-    public ResponseEntity<List<User>> getFriends(@PathVariable Long userId) {
+    public ResponseEntity<List<UserDto>> getFriends(@PathVariable Long userId) {
         log.info("Запрос на получение друзей пользователя с id = {}", userId);
-
+        if (userService.getUserById(userId) == null) {
+            throw new IllegalArgumentException("Пользователь с id = " + userId + " не найден.");
+        }
         List<User> friends = userService.getFriends(userId);
-        log.info("Друзья пользователя с id = {}: {}", userId, friends);
-        return ResponseEntity.ok(friends);
+        List<UserDto> friendDtos = friends.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(friendDtos);
     }
 
     @GetMapping("/{userId}/friends/common/{otherId}")
-    public ResponseEntity<List<User>> getCommonFriends(@PathVariable Long userId, @PathVariable Long otherId) {
+    public ResponseEntity<List<UserDto>> getCommonFriends(@PathVariable Long userId, @PathVariable Long otherId) {
         log.info("Запрос на получение общих друзей для пользователей с id = {} и id = {}", userId, otherId);
         List<User> commonFriends = userService.getCommonFriends(userId, otherId);
-        return ResponseEntity.ok(commonFriends);
+        List<UserDto> commonFriendDtos = commonFriends.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commonFriendDtos);
     }
-
 
     private void validateUser(User user) {
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
@@ -107,6 +134,13 @@ public class UserController {
         if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
             log.error("Дата рождения не может быть в будущем или пустой: {}", user.getBirthday());
             throw new ValidationException("Дата рождения не может быть в будущем или пустой");
+        }
+    }
+
+    private void validateUserId(Long userId) {
+        if (userService.getUserById(userId) == null) {
+            log.error("Пользователь с id = {} не найден.", userId);
+            throw new ValidationException("Пользователь с id = " + userId + " не найден.");
         }
     }
 }
