@@ -49,5 +49,6 @@ public class UserService {
     }
 
     public List<Film> getRecommendations(Long userId) {
-        return userStorage.getRecommendations(userId); }
+        return userStorage.getRecommendations(userId);
+    }
 }
