@@ -82,9 +82,11 @@ public class FilmController {
 
     @GetMapping("/popular")
     public ResponseEntity<List<FilmDto>> getPopularFilms(
-            @RequestParam(required = false, defaultValue = "10") int count) {
-        log.info("Запрос на получение {} популярных фильмов", count);
-        List<Film> popularFilms = filmService.getTopFilms(count);
+            @RequestParam(required = false, defaultValue = "10") int count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Запрос на получение {} популярных фильмов с genreId = {} и year = {}", count, genreId, year);
+        List<Film> popularFilms = filmService.getTopFilms(count, genreId, year);
         List<FilmDto> popularFilmDtos = popularFilms.stream()
                 .map(FilmMapper::toFilmDto)
                 .collect(Collectors.toList());
