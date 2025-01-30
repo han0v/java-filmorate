@@ -33,7 +33,8 @@ public class UserDbStorage implements UserStorage {
 
     @Autowired
     public UserDbStorage(NamedParameterJdbcOperations jdbcOperations, UserRowMapper userRowMapper,
-                         FilmRowMapper filmRowMapper, GenreDbStorage genreDbStorage, DirectorDbStorage directorDbStorage) {
+                         FilmRowMapper filmRowMapper, GenreDbStorage genreDbStorage,
+                         DirectorDbStorage directorDbStorage) {
         this.jdbcOperations = jdbcOperations;
         this.userRowMapper = userRowMapper; // Инициализация UserRowMapper
         this.filmRowMapper = filmRowMapper;

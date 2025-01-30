@@ -23,5 +23,5 @@ public interface UserStorage {
 
     List<User> getFriends(Long userId);
 
-    List<Film> getRecommendations (Long userId);
+    List<Film> getRecommendations(Long userId);
 }
