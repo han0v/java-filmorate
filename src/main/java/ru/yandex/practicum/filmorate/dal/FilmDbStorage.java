@@ -437,7 +437,8 @@ public class FilmDbStorage implements FilmStorage {
             });
             log.info("Найденные ID фильмов: {}", filmsIds);
             return filmsIds;
-        } if (searchColumn.equals("director")) {
+        }
+        if (searchColumn.equals("director")) {
             log.info("Получаем списки режиссеров, которые соответствуют подстроке {}", searchPattern);
             String sqlDirectorQuery = "SELECT director_id FROM directors WHERE name LIKE :searchPattern";
             MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
