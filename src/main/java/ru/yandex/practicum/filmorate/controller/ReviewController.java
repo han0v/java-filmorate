@@ -120,7 +120,7 @@ public class ReviewController {
             log.error("Ошибка валидации: Идентификатор пользователя должен быть положительным числом.");
             throw new NotFoundException("Идентификатор пользователя должен быть положительным числом.");
         }
-        if (review.getUserId() == null ) {
+        if (review.getUserId() == null) {
             log.error("Ошибка валидации: Идентификатор пользователя должен быть положительным числом.");
             throw new ValidationException("Идентификатор пользователя должен быть положительным числом.");
         }
@@ -128,7 +128,7 @@ public class ReviewController {
             log.error("Ошибка валидации: Идентификатор фильма должен быть положительным числом.");
             throw new NotFoundException("Идентификатор фильма должен быть положительным числом.");
         }
-        if (review.getFilmId() == null ) {
+        if (review.getFilmId() == null) {
             log.error("Ошибка валидации: Идентификатор пользователя должен быть положительным числом.");
             throw new ValidationException("Идентификатор пользователя должен быть положительным числом.");
         }

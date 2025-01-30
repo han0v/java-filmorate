@@ -12,8 +12,10 @@ import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -76,10 +78,9 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
 
-
     @Override
     public Review getReviewById(Long reviewId) {
-        log.info("Запрос на получение отзыва с id = {}",reviewId);
+        log.info("Запрос на получение отзыва с id = {}", reviewId);
         String sql = "SELECT * FROM reviews WHERE review_id = :reviewId";
         Map<String, Object> params = new HashMap<>();
         params.put("reviewId", reviewId);
@@ -145,7 +146,6 @@ public class ReviewDbStorage implements ReviewStorage {
             log.warn("Пользователь с id = {} уже поставил дизлайк на отзыв id = {}", userId, reviewId);
         }
     }
-
 
 
     @Override
