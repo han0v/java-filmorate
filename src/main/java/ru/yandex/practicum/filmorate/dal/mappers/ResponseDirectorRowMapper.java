@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.dal.mappers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.ResponseDirector;
+import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

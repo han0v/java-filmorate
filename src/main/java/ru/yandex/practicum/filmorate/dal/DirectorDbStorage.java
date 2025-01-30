@@ -15,8 +15,8 @@ import ru.yandex.practicum.filmorate.dal.mappers.ResponseDirectorRowMapper;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ErrorAddingData;
-import ru.yandex.practicum.filmorate.model.RequestDirector;
-import ru.yandex.practicum.filmorate.model.ResponseDirector;
+import ru.yandex.practicum.filmorate.mapper.RequestDirector;
+import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
 import java.util.List;

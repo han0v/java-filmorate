@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.RequestDirector;
-import ru.yandex.practicum.filmorate.model.ResponseDirector;
+import ru.yandex.practicum.filmorate.mapper.RequestDirector;
+import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
 import java.util.List;
