@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
@@ -187,4 +188,37 @@ public class FilmDbStorage implements FilmStorage {
             return genre;
         });
     }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = "SELECT f.*, COALESCE(fl.likes_count, 0) AS likes_count, mr.rating_mpa " +
+                "FROM film f " +
+                "JOIN film_likes l1 ON f.film_id = l1.film_id " +
+                "JOIN film_likes l2 ON f.film_id = l2.film_id " +
+                "LEFT JOIN (" +
+                "    SELECT film_id, COUNT(*) AS likes_count " +
+                "    FROM film_likes " +
+                "    GROUP BY film_id" +
+                ") fl ON f.film_id = fl.film_id " +
+                "JOIN MPA_RATING mr ON f.rating_id = mr.rating_id " +
+                "WHERE l1.user_id = :userId " +
+                "AND l2.user_id = :friendId " +
+                "ORDER BY likes_count DESC";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("friendId", friendId);
+        try {
+            List<Film> films = jdbcOperations.query(sql, params, filmRowMapper);
+
+            for (Film film : films) {
+                film.setGenres(getGenresForFilm(film.getId()));
+            }
+            return films;
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении SQL-запроса: ", e);
+            throw e;
+        }
+    }
+
+
 }

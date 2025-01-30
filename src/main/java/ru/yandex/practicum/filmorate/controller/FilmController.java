@@ -89,6 +89,18 @@ public class FilmController {
         return ResponseEntity.ok(popularFilmDtos);
     }
 
+    @GetMapping("/common")
+    public ResponseEntity<List<FilmDto>> getCommonFilms(
+            @RequestParam Long userId,
+            @RequestParam Long friendId) {
+        log.info("Запрос на получение общих фильмов для пользователей с id = {} и id = {}", userId, friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId,friendId);
+        List<FilmDto> commonFilmDtos = commonFilms.stream()
+                .map(FilmMapper::toFilmDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(commonFilmDtos);
+    }
+
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Ошибка валидации: Название не может быть пустым");
@@ -108,13 +120,13 @@ public class FilmController {
         }
         if (film.getMpa().getId() > 6) {
             log.error("Ошибка валидации: Рейтинга не существует");
-            throw new ValidationException("MPA Рейтинг должен существовать");
+            throw new NotFoundException("MPA Рейтинг должен существовать");
         }
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (!VALID_GENRE_IDS.contains(genre.getId())) {
                     log.error("Ошибка валидации: Жанра с id {} не существует", genre.getId());
-                    throw new ValidationException("Жанр с id " + genre.getId() + " не существует");
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не существует");
                 }
             }
         }
