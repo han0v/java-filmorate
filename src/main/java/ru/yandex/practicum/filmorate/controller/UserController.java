@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final EventService eventService;
 
     @GetMapping
     public ResponseEntity<Collection<UserDto>> findAll() {
@@ -42,6 +45,12 @@ public class UserController {
         }
         UserDto userDto = UserMapper.toUserDto(user);
         return ResponseEntity.ok(userDto);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getUserEvent(@PathVariable Long id) {
+        log.info("Запрос на получение ленты событий");
+        return eventService.getUserFeed(id);
     }
 
     @PostMapping
