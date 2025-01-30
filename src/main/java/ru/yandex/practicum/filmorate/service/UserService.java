@@ -48,5 +48,6 @@ public class UserService {
         return userStorage.getFriends(userId);
     }
 
-    public List<Film> getRecommendations(Long userId) { return userStorage.getRecommendations(userId); }
+    public List<Film> getRecommendations(Long userId) {
+        return userStorage.getRecommendations(userId); }
 }
