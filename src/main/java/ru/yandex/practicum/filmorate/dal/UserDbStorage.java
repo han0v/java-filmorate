@@ -23,12 +23,12 @@ import java.util.Map;
 public class UserDbStorage implements UserStorage {
 
     private final NamedParameterJdbcOperations jdbcOperations;
-    private final UserRowMapper userRowMapper; // Добавляем UserRowMapper
+    private final UserRowMapper userRowMapper;
 
     @Autowired
     public UserDbStorage(NamedParameterJdbcOperations jdbcOperations, UserRowMapper userRowMapper) {
         this.jdbcOperations = jdbcOperations;
-        this.userRowMapper = userRowMapper; // Инициализация UserRowMapper
+        this.userRowMapper = userRowMapper;
     }
 
     @Override
