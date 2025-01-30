@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
@@ -15,5 +18,8 @@ public class FilmDto {
     private LocalDate releaseDate;
     private int duration;
     private MpaRating mpa;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<Genre> genres;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<Director> directors;
 }

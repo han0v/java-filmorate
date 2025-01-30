@@ -43,6 +43,11 @@ public class FilmService {
         return filmStorage.getFilmById(filmId);
     }
 
+    public List<Film> getFilmsByDirector(Integer directorId, String sortBy) {
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
+    }
+
+
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId);
     }
