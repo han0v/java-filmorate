@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ErrorAddingData;
 import ru.yandex.practicum.filmorate.mapper.RequestDirector;
 import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class DirectorDbStorage implements DirectorStorage {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ResponseDirectorRowMapper responseMapper;
+    private final NamedParameterJdbcTemplate jdbcOperations;
 
     @Override
     public List<DirectorDto> getAllDirectors() {
@@ -122,5 +124,21 @@ public class DirectorDbStorage implements DirectorStorage {
             log.debug("Режиссер не найден в БД: {}", e.getMessage());
             throw new DirectorNotFoundException("Режиссер не найден в базе данных");
         }
+    }
+
+    public List<Director> getDirectorsForFilm(Long filmId) {
+        String sql = "SELECT d.director_id, d.name " +
+                "FROM directors d " +
+                "JOIN films_directors fd ON d.director_id = fd.director_id " +
+                "WHERE fd.film_id = :filmId";
+
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("filmId", filmId);
+
+        return jdbcOperations.query(sql, params, (rs, rowNum) -> {
+            Director director = new Director();
+            director.setId(rs.getInt("director_id"));
+            director.setName(rs.getString("name"));
+            return director;
+        });
     }
 }

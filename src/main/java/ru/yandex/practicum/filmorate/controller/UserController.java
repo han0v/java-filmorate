@@ -5,9 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -120,6 +123,18 @@ public class UserController {
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(commonFriendDtos);
+    }
+
+    @GetMapping("/{userId}/recommendations")
+    public ResponseEntity<List<FilmDto>> getRecommendations(@PathVariable Long userId) {
+        validateUserId(userId);
+        log.info("Запрос рекомендаций для пользователя с id = {}", userId);
+        List<Film> recommendedFilms = userService.getRecommendations(userId);
+        List<FilmDto> recommendedFilmDtos = recommendedFilms.stream()
+                .map(FilmMapper::toFilmDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(recommendedFilmDtos);
+
     }
 
     private void validateUser(User user) {

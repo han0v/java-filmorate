@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -21,4 +22,6 @@ public interface UserStorage {
     List<User> getCommonFriends(Long userId1, Long userId2);
 
     List<User> getFriends(Long userId);
+
+    List<Film> getRecommendations (Long userId);
 }

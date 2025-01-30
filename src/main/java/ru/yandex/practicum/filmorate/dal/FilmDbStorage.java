@@ -28,11 +28,16 @@ public class FilmDbStorage implements FilmStorage {
     @Autowired
     private final NamedParameterJdbcOperations jdbcOperations;
     private final FilmRowMapper filmRowMapper;
+    private final GenreDbStorage genreDbStorage;
+    private final DirectorDbStorage directorDbStorage;
 
     @Autowired
-    public FilmDbStorage(NamedParameterJdbcOperations jdbcOperations, FilmRowMapper filmRowMapper) {
+    public FilmDbStorage(NamedParameterJdbcOperations jdbcOperations, FilmRowMapper filmRowMapper,
+                         GenreDbStorage genreDbStorage, DirectorDbStorage directorDbStorage) {
         this.jdbcOperations = jdbcOperations;
         this.filmRowMapper = filmRowMapper;
+        this.genreDbStorage = genreDbStorage;
+        this.directorDbStorage = directorDbStorage;
     }
 
     @Override
@@ -134,7 +139,7 @@ public class FilmDbStorage implements FilmStorage {
             for (Film film : films) {
                 Long filmId = film.getId();
                 // Получаем жанры для каждого фильма
-                film.setGenres(getGenresForFilm(filmId));
+                film.setGenres(genreDbStorage.getGenresForFilm(filmId));
                 // Получаем режиссеров для каждого фильма
                 String directorsSql = "SELECT d.director_id, d.name " +
                         "FROM directors d " +
@@ -190,7 +195,7 @@ public class FilmDbStorage implements FilmStorage {
             Film film = jdbcOperations.queryForObject(sql, params, filmRowMapper);
 
             // Получаем жанры фильма
-            film.setGenres(getGenresForFilm(filmId));
+            film.setGenres(genreDbStorage.getGenresForFilm(filmId));
 
             // Получаем список режиссеров фильма
             String directorsSql = "SELECT d.director_id, d.name " +
@@ -206,8 +211,8 @@ public class FilmDbStorage implements FilmStorage {
                 return director;
             });
 
-            film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
-
+            //film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
+            film.setDirectors(directorDbStorage.getDirectorsForFilm(film.getId()));
             return film;
         } catch (EmptyResultDataAccessException e) {
             log.info("Фильм с id = {} не найден", filmId);
@@ -334,21 +339,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private List<Genre> getGenresForFilm(Long filmId) {
-        String sql = "SELECT g.genre_id, g.genre " +
-                "FROM film_genre fg " +
-                "JOIN genres g ON fg.genre_id = g.genre_id " +
-                "WHERE fg.film_id = :filmId";
-        Map<String, Object> params = new HashMap<>();
-        params.put("filmId", filmId);
 
-        return jdbcOperations.query(sql, params, (rs, rowNum) -> {
-            Genre genre = new Genre();
-            genre.setId(rs.getLong("genre_id"));
-            genre.setName(rs.getString("genre"));  // Добавляем имя жанра
-            return genre;
-        });
-    }
 
     @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
@@ -372,7 +363,7 @@ public class FilmDbStorage implements FilmStorage {
             List<Film> films = jdbcOperations.query(sql, params, filmRowMapper);
 
             for (Film film : films) {
-                film.setGenres(getGenresForFilm(film.getId()));
+                film.setGenres(genreDbStorage.getGenresForFilm(film.getId()));
             }
             return films;
         } catch (Exception e) {
