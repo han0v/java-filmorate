@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
-import ru.yandex.practicum.filmorate.model.RequestDirector;
+import ru.yandex.practicum.filmorate.mapper.RequestDirector;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.util.List;

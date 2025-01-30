@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
