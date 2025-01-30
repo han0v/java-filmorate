@@ -6,8 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
-import ru.yandex.practicum.filmorate.exception.BadGenreException;
-import ru.yandex.practicum.filmorate.exception.BadMpaException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
@@ -138,13 +136,13 @@ public class FilmController {
         }
         if (film.getMpa().getId() > 6) {
             log.error("Ошибка валидации: Рейтинга не существует");
-            throw new BadMpaException("MPA Рейтинг должен существовать");
+            throw new NotFoundException("MPA Рейтинг должен существовать");
         }
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (!VALID_GENRE_IDS.contains(genre.getId())) {
                     log.error("Ошибка валидации: Жанра с id {} не существует", genre.getId());
-                    throw new BadGenreException("Жанр с id " + genre.getId() + " не существует");
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не существует");
                 }
             }
         }
