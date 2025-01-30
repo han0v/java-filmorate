@@ -35,8 +35,8 @@ public class FilmService {
         filmStorage.removeLike(filmId, userId);
     }
 
-    public List<Film> getTopFilms(int count) {
-        return filmStorage.getTopFilms(count);
+    public List<Film> getTopFilms(int count, Long genreId, Integer year) {
+        return filmStorage.getTopFilms(count, genreId, year);
     }
 
     public Film getFilmById(Long filmId) {
@@ -46,7 +46,6 @@ public class FilmService {
     public List<Film> getFilmsByDirector(Integer directorId, String sortBy) {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
-
 
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId);

@@ -217,14 +217,31 @@ public class FilmDbStorage implements FilmStorage {
 
 
     @Override
-    public List<Film> getTopFilms(int count) {
-        String sql = "SELECT film_id FROM film ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = film.film_id) DESC LIMIT :count";
+    public List<Film> getTopFilms(int count, Long genreId, Integer year) {
+        String sql = "SELECT f.film_id " +
+                "FROM film f " +
+                "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                (genreId != null ? "JOIN film_genre fg ON f.film_id = fg.film_id " : "") +
+                "WHERE 1=1 " + // упрощает динамическую генерацию условий
+                (genreId != null ? "AND fg.genre_id = :genreId " : "") +
+                (year != null ? "AND YEAR(f.release_date) = :year " : "") +
+                "GROUP BY f.film_id " +
+                "ORDER BY COUNT(fl.user_id) DESC " +
+                "LIMIT :count";
         Map<String, Object> params = new HashMap<>();
         params.put("count", count);
+        if (genreId != null) {
+            params.put("genreId", genreId);
+        }
+        if (year != null) {
+            params.put("year", year);
+        }
         List<Long> topFilmIds = jdbcOperations.query(sql, params, (rs, rowNum) -> rs.getLong("film_id"));
         return topFilmIds.stream()
                 .map(this::getFilmById)
                 .toList();
+
+
     }
 
     @Override
