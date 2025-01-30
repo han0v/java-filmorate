@@ -1,8 +1,12 @@
 package ru.yandex.practicum.filmorate.mapper;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Collections;
+
+@Slf4j
 public class FilmMapper {
 
     public static FilmDto toFilmDto(Film film) {
@@ -13,7 +17,9 @@ public class FilmMapper {
         filmDto.setReleaseDate(film.getReleaseDate());
         filmDto.setDuration(film.getDuration());
         filmDto.setMpa(film.getMpa());
-        filmDto.setGenres(film.getGenres());
+        filmDto.setGenres(film.getGenres() != null ? film.getGenres() : Collections.emptyList());
+        filmDto.setDirectors(film.getDirectors() != null ? film.getDirectors() : Collections.emptyList());
+        log.info("FilmDto created: {}", filmDto);
         return filmDto;
     }
 
@@ -26,6 +32,7 @@ public class FilmMapper {
         film.setDuration(filmDto.getDuration());
         film.setMpa(filmDto.getMpa());
         film.setGenres(filmDto.getGenres());
+        film.setDirectors(filmDto.getDirectors());
         return film;
     }
 }

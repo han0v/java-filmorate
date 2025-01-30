@@ -74,6 +74,8 @@ public class FilmController {
         if (film == null) {
             return ResponseEntity.notFound().build();
         }
+        log.info("Проверка контроллера");
+        log.info("Полученный фильм: {}", film);
         FilmDto filmDto = FilmMapper.toFilmDto(film);
         return ResponseEntity.ok(filmDto);
     }
@@ -88,6 +90,20 @@ public class FilmController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(popularFilmDtos);
     }
+
+    @GetMapping("/director/{directorId}")
+    public ResponseEntity<List<Film>> getFilmsByDirector(
+            @PathVariable Integer directorId,
+            @RequestParam String sortBy) {
+        log.info("Запрос на получение фильмов режиссера {} с сортировкой по {}", directorId, sortBy);
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            log.info("Переданы НЕДОПУСТИМЫЕ значения сортировки");
+            throw new IllegalArgumentException("Некорректный параметр sortBy. Допустимые значения: year, likes");
+        }
+        log.info("Переданы ДОПУСТИМЫЕ значения сортировки");
+        return ResponseEntity.ok(filmService.getFilmsByDirector(directorId, sortBy));
+    }
+
 
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
@@ -118,5 +134,15 @@ public class FilmController {
                 }
             }
         }
+//        // Валидируем наличие режиссеров
+//        if (CollectionUtils.isEmpty(film.getDirectors())) {
+//            log.error("Ошибка валидации: Не указан режиссер фильма");
+//            throw new ValidationException("Должен быть указан хотя бы один режиссер");
+//        }
+//        // Проверяем, что у всех режиссеров указан id
+//        if (film.getDirectors().stream().anyMatch(director -> director.getId() == 0)) {
+//            log.error("Ошибка валидации: Не передан id режиссера");
+//            throw new ValidationException("Должен быть указан id режиссера");
+//        }
     }
 }
