@@ -340,7 +340,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
 
-
     @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         String sql = "SELECT f.*, COALESCE(fl.likes_count, 0) AS likes_count, mr.rating_mpa " +
@@ -484,5 +483,12 @@ public class FilmDbStorage implements FilmStorage {
         return filmsIdsByTitle.stream().distinct().collect(Collectors.toList());
     }
 
+    @Override
+    public void deleteFilm(Long filmId) {
+        String sql = "DELETE FROM film WHERE film_id = :filmId";
+        Map<String, Object> params = new HashMap<>();
+        params.put("filmId", filmId);
 
+        jdbcOperations.update(sql, params);
+    }
 }
