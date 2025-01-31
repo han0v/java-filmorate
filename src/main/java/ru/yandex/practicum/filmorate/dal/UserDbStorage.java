@@ -5,9 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -23,12 +26,20 @@ import java.util.Map;
 public class UserDbStorage implements UserStorage {
 
     private final NamedParameterJdbcOperations jdbcOperations;
-    private final UserRowMapper userRowMapper;
+    private final UserRowMapper userRowMapper; // Добавляем UserRowMapper
+    private final FilmRowMapper filmRowMapper;
+    private final GenreDbStorage genreDbStorage;
+    private final DirectorDbStorage directorDbStorage;
 
     @Autowired
-    public UserDbStorage(NamedParameterJdbcOperations jdbcOperations, UserRowMapper userRowMapper) {
+    public UserDbStorage(NamedParameterJdbcOperations jdbcOperations, UserRowMapper userRowMapper,
+                         FilmRowMapper filmRowMapper, GenreDbStorage genreDbStorage,
+                         DirectorDbStorage directorDbStorage) {
         this.jdbcOperations = jdbcOperations;
-        this.userRowMapper = userRowMapper;
+        this.userRowMapper = userRowMapper; // Инициализация UserRowMapper
+        this.filmRowMapper = filmRowMapper;
+        this.genreDbStorage = genreDbStorage;
+        this.directorDbStorage = directorDbStorage;
     }
 
     @Override
@@ -137,4 +148,39 @@ public class UserDbStorage implements UserStorage {
 
         return jdbcOperations.query(sql, params, userRowMapper); // Используем UserRowMapper
     }
+
+    @Override
+    public List<Film> getRecommendations(Long userId) {
+        String sql = "SELECT DISTINCT f.*, mr.rating_mpa FROM film f " +
+                "JOIN film_likes fl_similar ON f.film_id = fl_similar.film_id " +
+                "JOIN mpa_rating mr ON f.rating_id = mr.rating_id " +
+                "WHERE fl_similar.user_id IN (" +
+                "    SELECT fl_other.user_id " +
+                "    FROM film_likes fl_user " +
+                "    JOIN film_likes fl_other ON fl_user.film_id = fl_other.film_id " +
+                "    WHERE fl_user.user_id = :userId " +
+                "      AND fl_other.user_id != :userId " +
+                "    GROUP BY fl_other.user_id " +
+                "    ORDER BY COUNT(fl_other.film_id) DESC " +
+                "    LIMIT 1 " +
+                ") " +
+                "AND f.film_id NOT IN (" +
+                "    SELECT film_id FROM film_likes WHERE user_id = :userId " +
+                ")";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", userId);
+        try {
+            List<Film> films = jdbcOperations.query(sql, params, filmRowMapper);
+
+            for (Film film : films) {
+                film.setGenres(genreDbStorage.getGenresForFilm(film.getId()));
+                film.setDirectors(directorDbStorage.getDirectorsForFilm(film.getId()));
+            }
+            return films;
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении SQL-запроса: ", e);
+            throw e;
+        }
+    }
+
 }
