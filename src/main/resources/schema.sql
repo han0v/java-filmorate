@@ -67,3 +67,25 @@ CREATE TABLE IF NOT EXISTS films_directors (
   PRIMARY KEY (film_id, director_id)
 );
 
+-- Таблица отзывов (reviews)
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    content TEXT NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    user_id INTEGER NOT NULL,
+    film_id INTEGER NOT NULL,
+    useful INTEGER DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES film(film_id) ON DELETE CASCADE
+);
+
+-- Таблица лайков и дизлайков отзывов (review_likes)
+CREATE TABLE IF NOT EXISTS review_likes (
+    review_id INTEGER,
+    user_id INTEGER,
+    is_like BOOLEAN NOT NULL,
+    PRIMARY KEY (review_id, user_id),
+    FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
