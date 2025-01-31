@@ -51,4 +51,8 @@ public class UserService {
     public List<Film> getRecommendations(Long userId) {
         return userStorage.getRecommendations(userId);
     }
+
+    public void deleteUser(Long userId) {
+        userStorage.deleteUser(userId);
+    }
 }

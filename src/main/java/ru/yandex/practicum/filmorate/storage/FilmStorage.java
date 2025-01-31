@@ -25,4 +25,6 @@ public interface FilmStorage {
     List<Film> getCommonFilms(Long userId, Long friendId);
 
     List<Film> getSearchedFilms(String query, String[] searchWords);
+
+    void deleteFilm(Long filmId);
 }

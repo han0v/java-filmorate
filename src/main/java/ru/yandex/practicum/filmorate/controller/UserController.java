@@ -134,8 +134,16 @@ public class UserController {
                 .map(FilmMapper::toFilmDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(recommendedFilmDtos);
-
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        log.info("Удаление пользователя с id = {}", id);
+        validateUserId(id);
+        userService.deleteUser(id);
+        return ResponseEntity.ok().build();
+    }
+
 
     private void validateUser(User user) {
         if (user.getEmail() == null || !user.getEmail().contains("@")) {

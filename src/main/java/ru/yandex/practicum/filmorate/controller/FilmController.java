@@ -112,7 +112,7 @@ public class FilmController {
             @RequestParam Long userId,
             @RequestParam Long friendId) {
         log.info("Запрос на получение общих фильмов для пользователей с id = {} и id = {}", userId, friendId);
-        List<Film> commonFilms = filmService.getCommonFilms(userId,friendId);
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
         List<FilmDto> commonFilmDtos = commonFilms.stream()
                 .map(FilmMapper::toFilmDto)
                 .collect(Collectors.toList());
@@ -130,8 +130,6 @@ public class FilmController {
             log.error("Ошибка: пустые параметры запроса");
             return ResponseEntity.badRequest().build();
         }
-        // Проверяем, что переданы только допустимые значения
-        // Разделяем параметры, если передано несколько значений через запятую
         String[] searchWords = by.toLowerCase().split(",");
         Set<String> validSearchTypes = Set.of("director", "title");
         for (String type : searchWords) {
@@ -141,6 +139,18 @@ public class FilmController {
             }
         }
         return ResponseEntity.ok(filmService.getSearchedFilms(query, searchWords));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable Long id) {
+        log.info("Удаление фильма с id = {}", id);
+        Film existingFilm = filmService.getFilmById(id);
+        if (existingFilm == null) {
+            log.error("Фильм с id = {} не найден", id);
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
+        }
+        filmService.deleteFilm(id);
+        return ResponseEntity.ok().build();
     }
 
 

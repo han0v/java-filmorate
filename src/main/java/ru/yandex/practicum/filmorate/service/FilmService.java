@@ -54,4 +54,8 @@ public class FilmService {
     public List<Film> getSearchedFilms(String query, String[] searchWords) {
         return filmStorage.getSearchedFilms(query, searchWords);
     }
+
+    public void deleteFilm(Long filmId) {
+        filmStorage.deleteFilm(filmId);
+    }
 }

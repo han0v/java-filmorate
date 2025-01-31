@@ -183,4 +183,12 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
+    public void deleteUser(Long userId) {
+        String sql = "DELETE FROM users WHERE user_id = :userId";
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+
+        jdbcOperations.update(sql, params);
+    }
 }
