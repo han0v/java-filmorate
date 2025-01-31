@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -14,6 +15,7 @@ import java.util.List;
 public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    private final EventService eventService;
 
     public Film addFilm(Film film) {
         return filmStorage.addFilm(film);
@@ -29,10 +31,30 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         filmStorage.addLike(filmId, userId);
+
+        Event event = Event.builder()
+                .timestamp(System.currentTimeMillis())
+                .userId(userId)
+                .eventType("LIKE")
+                .operation("ADD")
+                .entityId(filmId)
+                .build();
+
+        eventService.addEvent(event);
     }
 
     public void removeLike(Long filmId, Long userId) {
         filmStorage.removeLike(filmId, userId);
+
+        Event event = Event.builder()
+                .timestamp(System.currentTimeMillis())
+                .userId(userId)
+                .eventType("LIKE")
+                .operation("REMOVE")
+                .entityId(filmId)
+                .build();
+
+        eventService.addEvent(event);
     }
 
     public List<Film> getTopFilms(int count, Long genreId, Integer year) {
