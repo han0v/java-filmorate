@@ -10,8 +10,10 @@ import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final EventService eventService;
 
     @GetMapping
     public ResponseEntity<Collection<UserDto>> findAll() {
@@ -45,6 +48,11 @@ public class UserController {
         }
         UserDto userDto = UserMapper.toUserDto(user);
         return ResponseEntity.ok(userDto);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getUserFeed(@PathVariable Long id) {
+        return eventService.getUserFeed(id);
     }
 
     @PostMapping
