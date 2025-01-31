@@ -50,4 +50,8 @@ public class FilmService {
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId);
     }
+
+    public List<Film> getSearchedFilms(String query, String[] searchWords) {
+        return filmStorage.getSearchedFilms(query, searchWords);
+    }
 }

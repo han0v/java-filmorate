@@ -119,6 +119,31 @@ public class FilmController {
         return ResponseEntity.ok(commonFilmDtos);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Film>> getSearchedFilm(
+            @RequestParam String query,
+            @RequestParam String by) {
+        log.info("В контроллере запрос на поиск фильма с подстрокой {}, отсротировано по {}",
+                query,
+                by);
+        if (query.isBlank() || by.isBlank()) {
+            log.error("Ошибка: пустые параметры запроса");
+            return ResponseEntity.badRequest().build();
+        }
+        // Проверяем, что переданы только допустимые значения
+        // Разделяем параметры, если передано несколько значений через запятую
+        String[] searchWords = by.toLowerCase().split(",");
+        Set<String> validSearchTypes = Set.of("director", "title");
+        for (String type : searchWords) {
+            if (!validSearchTypes.contains(type.trim())) {
+                log.error("Ошибка: недопустимое значение параметра 'by' = '{}'", by);
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        return ResponseEntity.ok(filmService.getSearchedFilms(query, searchWords));
+    }
+
+
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Ошибка валидации: Название не может быть пустым");

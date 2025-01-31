@@ -372,5 +372,117 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getSearchedFilms(String query, String[] searchColumns) {
+        log.info("Вызван метод в хранилище по желаемых фильмов");
+        //сразу создаём корректную подстроку для поиска
+        String searchPattern = "%" + query + "%";
+        List<Integer> filmsIds = new ArrayList<>();
+        //если параметр один
+        if (searchColumns.length == 1) {
+            String searchWord = searchColumns[0];
+            filmsIds = getIdsByOneParameter(searchPattern, searchWord);
+        } else if (searchColumns.length == 2) {
+            filmsIds = getIdsByTwoParameter(searchPattern, searchColumns);
+        }
+        if (filmsIds.isEmpty()) {
+            log.info("Не точный запрос: Не найдено фильмов под требуемым параметрам");
+            return List.of();
+        }
+        //Получили айдишники фильмов. Переходим к сортировке
+        log.info("Попытка получить список всех найденных фильмов:");
+        List<Film> films = getFilmsById(filmsIds);
+        log.info("Результаты в методе searchedFilms(неотсортированные фильмы): {}", films);
+        //Сортировка по лайкам
+        log.info("Попытка получить количество лайков для фильмов");
+        // Получаем количество лайков для каждого фильма
+        String sqlLikesCount = "SELECT film_id, COUNT(*) AS like_count " +
+                "FROM film_likes " +
+                "WHERE film_id IN (:filmIds) " +
+                "GROUP BY film_id";
+        MapSqlParameterSource likeParams = new MapSqlParameterSource("filmIds", filmsIds);
+        List<Map<String, Object>> likesResult = jdbcOperations.queryForList(sqlLikesCount, likeParams);
+        // Создаём мапу для фильмов и их количества лайков
+        Map<Integer, Integer> filmLikesMap = new HashMap<>();
+        for (Map<String, Object> like : likesResult) {
+            Integer filmId = (Integer) like.get("film_id");
+            Integer likeCount = ((Long) like.get("like_count")).intValue();
+            filmLikesMap.put(filmId, likeCount);
+        }
+        // Сортируем фильмы по количеству лайков
+        films = films.stream()
+                .sorted((film1, film2) -> Integer.compare(filmLikesMap.getOrDefault(film2.getId().intValue(), 0),
+                        filmLikesMap.getOrDefault(film1.getId().intValue(), 0)))  // Сортировка по убыванию лайков
+                .collect(Collectors.toList());
+        log.info("Отсортированные фильмы по лайкам: {}", films);
+        return films;
+    }
+
+    //ищем по одной из таблиц
+    private List<Integer> getIdsByOneParameter(String searchPattern, String searchColumn) {
+        if (searchColumn.equals("title")) {
+            String sqlQuery = "SELECT film_id FROM film WHERE name LIKE :searchPattern";
+            MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
+            List<Integer> filmsIds = jdbcOperations.query(sqlQuery, namedParameters, (rs, rowNum) -> {
+                return rs.getInt("film_id");
+            });
+            log.info("Найденные ID фильмов: {}", filmsIds);
+            return filmsIds;
+        }
+        if (searchColumn.equals("director")) {
+            log.info("Получаем списки режиссеров, которые соответствуют подстроке {}", searchPattern);
+            String sqlDirectorQuery = "SELECT director_id FROM directors WHERE name LIKE :searchPattern";
+            MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
+            List<Integer> directorIds = jdbcOperations.query(sqlDirectorQuery, namedParameters,
+                    (rs, rowNum) -> rs.getInt("director_id"));
+            log.info("Айди режиссеров, имя которых соответствует переданной подстроке: {}", directorIds);
+            if (directorIds.isEmpty()) {
+                log.info("Не найдено режиссёров по запросу: {}", searchPattern);
+                return Collections.emptyList();
+            }
+            String sqlFilmsQuery = "SELECT film_id FROM films_directors WHERE director_id IN (:directorIds)";
+            MapSqlParameterSource filmParams = new MapSqlParameterSource("directorIds", directorIds);
+            List<Integer> filmsIds = jdbcOperations.query(sqlFilmsQuery, filmParams, (rs, rowNum) -> rs.getInt("film_id"));
+
+            log.info("Найденные ID фильмов по режиссёру: {}", filmsIds);
+            return filmsIds;
+        }
+        return Collections.emptyList();
+    }
+
+    //ищем сразу по двум таблицам, удаляем дубликаты
+    private List<Integer> getIdsByTwoParameter(String searchPattern, String[] searchColumns) {
+        // Инициализация переменных для хранения результатов
+        List<Integer> filmsIdsByTitle = new ArrayList<>();
+        List<Integer> filmsIdsByDirector = new ArrayList<>();
+
+        // Проверка и обработка параметра "title"
+        if (Arrays.asList(searchColumns).contains("title")) {
+            String sqlTitleQuery = "SELECT film_id FROM film WHERE name LIKE :searchPattern";
+            MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
+            filmsIdsByTitle = jdbcOperations.query(sqlTitleQuery, namedParameters, (rs, rowNum) -> rs.getInt("film_id"));
+            log.info("Найденные фильмы по названию: {}", filmsIdsByTitle);
+        }
+        // Проверка и обработка параметра "director"
+        if (Arrays.asList(searchColumns).contains("director")) {
+            log.info("Ищем фильмы по режиссёру");
+            String sqlDirectorQuery = "SELECT director_id FROM directors WHERE name LIKE :searchPattern";
+            MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
+            List<Integer> directorIds = jdbcOperations.query(sqlDirectorQuery, namedParameters,
+                    (rs, rowNum) -> rs.getInt("director_id"));
+
+            if (!directorIds.isEmpty()) {
+                // Ищем фильмы, связанные с найденными режиссёрами
+                String sqlFilmsQuery = "SELECT film_id FROM films_directors WHERE director_id IN (:directorIds)";
+                MapSqlParameterSource filmParams = new MapSqlParameterSource("directorIds", directorIds);
+                filmsIdsByDirector = jdbcOperations.query(sqlFilmsQuery, filmParams, (rs, rowNum) -> rs.getInt("film_id"));
+                log.info("Найденные фильмы по режиссёрам: {}", filmsIdsByDirector);
+            }
+        }
+        // Объединяем результаты, убираем дубликаты и возвращаем
+        filmsIdsByTitle.addAll(filmsIdsByDirector);
+        return filmsIdsByTitle.stream().distinct().collect(Collectors.toList());
+    }
+
 
 }
