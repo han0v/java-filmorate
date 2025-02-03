@@ -38,7 +38,7 @@ public class ReviewController {
     public ResponseEntity<ReviewDto> updateReview(@RequestBody ReviewDto reviewDto) {
         Review review = ReviewMapper.toReview(reviewDto);
         validateReview(review); // Валидация отзыва
-        validateIds(review.getUserId(), review.getFilmId()); // Проверка существования ID
+        validateIds(review.getUserId(), review.getFilmId());
         Review updatedReview = reviewService.updateReview(review);
         return ResponseEntity.ok(ReviewMapper.toReviewDto(updatedReview));
     }

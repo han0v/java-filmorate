@@ -1,16 +1,16 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -19,26 +19,18 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("checkstyle:Regexp")
 @Slf4j
-@Component
 @Qualifier("filmDbStorage")
 @Repository
+@RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
-
-    @Autowired
     private final NamedParameterJdbcOperations jdbcOperations;
     private final FilmRowMapper filmRowMapper;
     private final GenreDbStorage genreDbStorage;
     private final DirectorDbStorage directorDbStorage;
+    private final MpaDbStorage mpaDbStorage;
 
-    @Autowired
-    public FilmDbStorage(NamedParameterJdbcOperations jdbcOperations, FilmRowMapper filmRowMapper,
-                         GenreDbStorage genreDbStorage, DirectorDbStorage directorDbStorage) {
-        this.jdbcOperations = jdbcOperations;
-        this.filmRowMapper = filmRowMapper;
-        this.genreDbStorage = genreDbStorage;
-        this.directorDbStorage = directorDbStorage;
-    }
 
     @Override
     public Film addFilm(Film film) {
@@ -103,7 +95,10 @@ public class FilmDbStorage implements FilmStorage {
         jdbcOperations.update(sql, params);
         updateFilmGenres(film.getId(), film.getGenres());
         //обновляем результирующую таблицу
+        removeDirectorsFromFilm(film.getId());
         insertDirectorAndFilms(film);
+
+        film.setGenres(genreDbStorage.getGenresForFilm(film.getId()));
 
         return film;
     }
@@ -252,6 +247,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getFilmsByDirector(Integer directorId, String sortBy) {
         log.info("Запущен метод по получению фильмов режиссера с id = {}", directorId);
+
+        if (!isDirectorExist(directorId)) {
+            log.warn("Режиссер с id = {} не найден", directorId);
+            throw new NotFoundException("Режиссер с id " + directorId + " не найден");
+        }
         String sqlFilmsByYear = "SELECT fd.director_id, fd.film_id " +
                 "FROM films_directors as fd " +
                 "WHERE fd.director_id = :director_id";
@@ -322,7 +322,10 @@ public class FilmDbStorage implements FilmStorage {
         jdbcOperations.update(sqlDelete, params);
 
         if (genres != null && !genres.isEmpty()) {
-            Set<Genre> uniqueGenres = new HashSet<>(genres);
+//            Set<Genre> uniqueGenres = new HashSet<>(genres);
+            List<Genre> uniqueGenres = genres.stream()
+                    .distinct()
+                    .collect(Collectors.toList());
             List<Genre> uniqueGenreList = new ArrayList<>(uniqueGenres);
 
             String sqlInsert = "INSERT INTO film_genre (film_id, genre_id) VALUES (:filmId, :genreId)";
@@ -486,9 +489,25 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteFilm(Long filmId) {
         String sql = "DELETE FROM film WHERE film_id = :filmId";
-        Map<String, Object> params = new HashMap<>();
-        params.put("filmId", filmId);
-
+        if (jdbcOperations == null) {
+            log.error("Ошибка: jdbcOperations = NULL! Spring не смог его создать.");
+            throw new IllegalStateException("jdbcOperations не инициализирован!");
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("filmId", filmId);
         jdbcOperations.update(sql, params);
     }
+
+    public void removeDirectorsFromFilm(Long filmId) {
+        String sql = "DELETE FROM films_directors WHERE film_id = :filmId";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("filmId", filmId);
+        jdbcOperations.update(sql, params);
+    }
+
+    private boolean isDirectorExist(Integer directorId) {
+        String sql = "SELECT COUNT(*) FROM directors WHERE director_id = :directorId";
+        MapSqlParameterSource params = new MapSqlParameterSource("directorId", directorId);
+        Integer count = jdbcOperations.queryForObject(sql, params, Integer.class);
+        return count != null && count > 0;
+    }
+
 }
