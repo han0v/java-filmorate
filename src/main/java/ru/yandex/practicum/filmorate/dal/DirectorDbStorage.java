@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -63,7 +64,13 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public ResponseDirector createDirector(RequestDirector request) {
         log.info("В классе {} запущен метод по созданию режиссера {}", DirectorDbStorage.class.getName(), request);
-        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("name", request.getName());
+
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            log.debug("Ошибка: имя режиссёра пустое или состоит только из пробелов");
+            throw new ErrorAddingData("Имя режиссёра не может быть пустым или состоять только из пробелов");
+        }
+
+        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("name", request.getName().trim());
         String query = "INSERT INTO directors (name) VALUES (:name)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
