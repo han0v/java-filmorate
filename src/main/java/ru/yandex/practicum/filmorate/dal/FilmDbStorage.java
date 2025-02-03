@@ -378,7 +378,8 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getSearchedFilms(String query, String[] searchColumns) {
         log.info("Вызван метод в хранилище по желаемых фильмов");
         //сразу создаём корректную подстроку для поиска
-        String searchPattern = "%" + query + "%";
+        //String searchPattern = "%" + query + "%";
+        String searchPattern = "%" + query.toLowerCase() + "%";
         List<Integer> filmsIds = new ArrayList<>();
         //если параметр один
         if (searchColumns.length == 1) {
@@ -400,7 +401,7 @@ public class FilmDbStorage implements FilmStorage {
         // Получаем количество лайков для каждого фильма
         String sqlLikesCount = "SELECT film_id, COUNT(*) AS like_count " +
                 "FROM film_likes " +
-                "WHERE film_id IN (:filmIds) " +
+                "WHERE LOWER(film_id) IN (:filmIds) " +
                 "GROUP BY film_id";
         MapSqlParameterSource likeParams = new MapSqlParameterSource("filmIds", filmsIds);
         List<Map<String, Object>> likesResult = jdbcOperations.queryForList(sqlLikesCount, likeParams);
@@ -423,7 +424,7 @@ public class FilmDbStorage implements FilmStorage {
     //ищем по одной из таблиц
     private List<Integer> getIdsByOneParameter(String searchPattern, String searchColumn) {
         if (searchColumn.equals("title")) {
-            String sqlQuery = "SELECT film_id FROM film WHERE name LIKE :searchPattern";
+            String sqlQuery = "SELECT film_id FROM film WHERE LOWER(name) LIKE LOWER(:searchPattern)";
             MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
             List<Integer> filmsIds = jdbcOperations.query(sqlQuery, namedParameters, (rs, rowNum) -> {
                 return rs.getInt("film_id");
@@ -460,7 +461,7 @@ public class FilmDbStorage implements FilmStorage {
 
         // Проверка и обработка параметра "title"
         if (Arrays.asList(searchColumns).contains("title")) {
-            String sqlTitleQuery = "SELECT film_id FROM film WHERE name LIKE :searchPattern";
+            String sqlTitleQuery = "SELECT film_id FROM film WHERE LOWER(name) LIKE LOWER(:searchPattern)";
             MapSqlParameterSource namedParameters = new MapSqlParameterSource("searchPattern", searchPattern);
             filmsIdsByTitle = jdbcOperations.query(sqlTitleQuery, namedParameters, (rs, rowNum) -> rs.getInt("film_id"));
             log.info("Найденные фильмы по названию: {}", filmsIdsByTitle);
