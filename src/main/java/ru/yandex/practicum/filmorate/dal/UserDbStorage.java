@@ -44,6 +44,10 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User addUser(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+
         String sql = "INSERT INTO users (login, name, email, birthday) VALUES (:login, :name, :email, :birthday)";
         Map<String, Object> params = new HashMap<>();
         params.put("login", user.getLogin());

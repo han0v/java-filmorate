@@ -78,4 +78,8 @@ public class ReviewService {
     public void removeDislike(Long reviewId, Long userId) {
         reviewStorage.removeDislike(reviewId, userId);
     }
+
+    public List<Review> getAllReviewsSortedByUseful() {
+        return reviewStorage.getAllReviewsSortedByUseful();
+    }
 }

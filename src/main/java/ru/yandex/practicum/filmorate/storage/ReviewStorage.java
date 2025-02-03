@@ -22,4 +22,6 @@ public interface ReviewStorage {
     void removeLike(Long reviewId, Long userId);
 
     void removeDislike(Long reviewId, Long userId);
+
+    List<Review> getAllReviewsSortedByUseful();
 }

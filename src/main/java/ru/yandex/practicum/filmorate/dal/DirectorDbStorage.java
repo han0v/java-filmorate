@@ -52,7 +52,7 @@ public class DirectorDbStorage implements DirectorStorage {
         ResponseDirector responseDirector;
         try {
             responseDirector = jdbc.queryForObject(query, namedParameters, responseMapper);
-        } catch (EmptyResultDataAccessException  e) {
+        } catch (EmptyResultDataAccessException e) {
             log.error("Ошибка при получении режиссера из БД: {}", e.getMessage());
             throw new DirectorNotFoundException("Режиссер не найден в базе данных");
         }
@@ -63,11 +63,17 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public ResponseDirector createDirector(RequestDirector request) {
         log.info("В классе {} запущен метод по созданию режиссера {}", DirectorDbStorage.class.getName(), request);
-        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("name", request.getName());
+
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            log.debug("Ошибка: имя режиссёра пустое или состоит только из пробелов");
+            throw new ErrorAddingData("Имя режиссёра не может быть пустым или состоять только из пробелов");
+        }
+
+        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("name", request.getName().trim());
         String query = "INSERT INTO directors (name) VALUES (:name)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
-            jdbc.update(query, namedParameters, keyHolder, new String[] {"director_id"});
+            jdbc.update(query, namedParameters, keyHolder, new String[]{"director_id"});
             Integer generatedId = (Integer) keyHolder.getKey();
             return new ResponseDirector(generatedId, request.getName());
         } catch (DataAccessException e) {

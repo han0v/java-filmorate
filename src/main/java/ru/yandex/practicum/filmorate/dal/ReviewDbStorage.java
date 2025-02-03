@@ -100,11 +100,20 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public List<Review> getReviewsByFilmId(Long filmId, int count) {
-        String sql = "SELECT * FROM reviews WHERE film_id = :filmId ORDER BY useful DESC LIMIT :count";
+        String sql;
+        log.info("запрос на отзывы");
         Map<String, Object> params = new HashMap<>();
-        params.put("filmId", filmId);
+
         params.put("count", count);
 
+        if (filmId != null) {
+            sql = "SELECT * FROM reviews WHERE film_id = :filmId ORDER BY useful DESC LIMIT :count";
+            params.put("filmId", filmId);
+        } else {
+            sql = "SELECT * FROM reviews ORDER BY useful DESC LIMIT :count";
+        }
+
+        log.info("lllll" + jdbcOperations.query(sql, params, reviewRowMapper));
         return jdbcOperations.query(sql, params, reviewRowMapper);
     }
 
@@ -177,5 +186,11 @@ public class ReviewDbStorage implements ReviewStorage {
         params.put("reviewId", reviewId);
 
         jdbcOperations.update(sql, params);
+    }
+
+    @Override
+    public List<Review> getAllReviewsSortedByUseful() {
+        String sql = "SELECT * FROM reviews ORDER BY useful DESC";
+        return jdbcOperations.query(sql, reviewRowMapper);
     }
 }

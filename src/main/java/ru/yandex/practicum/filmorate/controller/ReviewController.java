@@ -61,10 +61,18 @@ public class ReviewController {
 
 
     @GetMapping
-    public ResponseEntity<List<ReviewDto>> getReviewsByFilmId(
+    public ResponseEntity<List<ReviewDto>> getReviews(
             @RequestParam(required = false) Long filmId,
             @RequestParam(defaultValue = "10") int count) {
-        List<Review> reviews = reviewService.getReviewsByFilmId(filmId, count);
+
+        List<Review> reviews;
+
+        if (filmId != null) {
+            reviews = reviewService.getReviewsByFilmId(filmId, count); // передаём count
+        } else {
+            reviews = reviewService.getAllReviewsSortedByUseful(); // без count
+        }
+
         List<ReviewDto> reviewDtos = reviews.stream()
                 .map(ReviewMapper::toReviewDto)
                 .toList();
