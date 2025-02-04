@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -12,7 +14,10 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private List<Genre> genres;
     private MpaRating mpa;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<Genre> genres;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<Director> directors;
 }
 
