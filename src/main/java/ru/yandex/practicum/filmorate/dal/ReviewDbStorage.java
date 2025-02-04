@@ -52,13 +52,12 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review updateReview(Review review) {
-        String sql = "UPDATE reviews SET content = :content, is_positive = :isPositive, useful = :useful " +
+        String sql = "UPDATE reviews SET content = :content, is_positive = :isPositive " + // Убрали useful из запроса
                 "WHERE review_id = :reviewId";
 
         Map<String, Object> params = new HashMap<>();
         params.put("content", review.getContent());
         params.put("isPositive", review.getIsPositive());
-        params.put("useful", review.getUseful());
         params.put("reviewId", review.getReviewId());
 
         jdbcOperations.update(sql, params);
