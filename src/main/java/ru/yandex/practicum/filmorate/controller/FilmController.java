@@ -74,85 +74,20 @@ public class FilmController {
         if (film == null) {
             return ResponseEntity.notFound().build();
         }
-        log.info("Проверка контроллера");
-        log.info("Полученный фильм: {}", film);
         FilmDto filmDto = FilmMapper.toFilmDto(film);
         return ResponseEntity.ok(filmDto);
     }
 
     @GetMapping("/popular")
     public ResponseEntity<List<FilmDto>> getPopularFilms(
-            @RequestParam(required = false, defaultValue = "10") int count,
-            @RequestParam(required = false) Long genreId,
-            @RequestParam(required = false) Integer year) {
-        log.info("Запрос на получение {} популярных фильмов с genreId = {} и year = {}", count, genreId, year);
-        List<Film> popularFilms = filmService.getTopFilms(count, genreId, year);
+            @RequestParam(required = false, defaultValue = "10") int count) {
+        log.info("Запрос на получение {} популярных фильмов", count);
+        List<Film> popularFilms = filmService.getTopFilms(count);
         List<FilmDto> popularFilmDtos = popularFilms.stream()
                 .map(FilmMapper::toFilmDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(popularFilmDtos);
     }
-
-    @GetMapping("/director/{directorId}")
-    public ResponseEntity<List<Film>> getFilmsByDirector(
-            @PathVariable Integer directorId,
-            @RequestParam String sortBy) {
-        log.info("Запрос на получение фильмов режиссера {} с сортировкой по {}", directorId, sortBy);
-        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
-            log.info("Переданы НЕДОПУСТИМЫЕ значения сортировки");
-            throw new IllegalArgumentException("Некорректный параметр sortBy. Допустимые значения: year, likes");
-        }
-        log.info("Переданы ДОПУСТИМЫЕ значения сортировки");
-        return ResponseEntity.ok(filmService.getFilmsByDirector(directorId, sortBy));
-    }
-
-
-    @GetMapping("/common")
-    public ResponseEntity<List<FilmDto>> getCommonFilms(
-            @RequestParam Long userId,
-            @RequestParam Long friendId) {
-        log.info("Запрос на получение общих фильмов для пользователей с id = {} и id = {}", userId, friendId);
-        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
-        List<FilmDto> commonFilmDtos = commonFilms.stream()
-                .map(FilmMapper::toFilmDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(commonFilmDtos);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<Film>> getSearchedFilm(
-            @RequestParam String query,
-            @RequestParam String by) {
-        log.info("В контроллере запрос на поиск фильма с подстрокой {}, отсротировано по {}",
-                query,
-                by);
-        if (query.isBlank() || by.isBlank()) {
-            log.error("Ошибка: пустые параметры запроса");
-            return ResponseEntity.badRequest().build();
-        }
-        String[] searchWords = by.toLowerCase().split(",");
-        Set<String> validSearchTypes = Set.of("director", "title");
-        for (String type : searchWords) {
-            if (!validSearchTypes.contains(type.trim())) {
-                log.error("Ошибка: недопустимое значение параметра 'by' = '{}'", by);
-                return ResponseEntity.badRequest().build();
-            }
-        }
-        return ResponseEntity.ok(filmService.getSearchedFilms(query, searchWords));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFilm(@PathVariable Long id) {
-        log.info("Удаление фильма с id = {}", id);
-        Film existingFilm = filmService.getFilmById(id);
-        if (existingFilm == null) {
-            log.error("Фильм с id = {} не найден", id);
-            throw new NotFoundException("Фильм с id = " + id + " не найден");
-        }
-        filmService.deleteFilm(id);
-        return ResponseEntity.ok().build();
-    }
-
 
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
@@ -173,13 +108,13 @@ public class FilmController {
         }
         if (film.getMpa().getId() > 6) {
             log.error("Ошибка валидации: Рейтинга не существует");
-            throw new NotFoundException("MPA Рейтинг должен существовать");
+            throw new ValidationException("MPA Рейтинг должен существовать");
         }
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (!VALID_GENRE_IDS.contains(genre.getId())) {
                     log.error("Ошибка валидации: Жанра с id {} не существует", genre.getId());
-                    throw new NotFoundException("Жанр с id " + genre.getId() + " не существует");
+                    throw new ValidationException("Жанр с id " + genre.getId() + " не существует");
                 }
             }
         }

@@ -61,25 +61,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<phase>verify</phase> <!-- Выполнение на этапе verify -->
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<configLocation>checkstyle.xml</configLocation> <!-- Конфигурационный файл Checkstyle -->
-					<consoleOutput>true</consoleOutput> <!-- Отображение результатов в консоли -->
-					<includeTestSourceDirectory>true</includeTestSourceDirectory> <!-- Проверка тестов -->
-					<failOnViolation>true</failOnViolation> <!-- Падение билда при ошибках -->
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 

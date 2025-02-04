@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
@@ -17,7 +17,7 @@ import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({FilmDbStorage.class, FilmRowMapper.class}) // Импортируем FilmDbStorage и FilmRowMapper
@@ -94,6 +94,6 @@ class FilmDbStorageTest {
 
         // Проверяем, что список не пустой и содержит добавленный фильм
         assertThat(films).isNotEmpty();
-        assertThat(films).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(films).hasSize(1);
     }
 }

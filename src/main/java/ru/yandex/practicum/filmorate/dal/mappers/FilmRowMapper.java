@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
@@ -20,16 +20,11 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setDescription(rs.getString("description"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
-
-        // Проверка на наличие данных рейтинга
         MpaRating mpaRating = new MpaRating();
         mpaRating.setId(rs.getLong("rating_id"));
-        mpaRating.setName(rs.getString("rating_MPA") != null ? rs.getString("rating_MPA") : "Неизвестно"); // Проверка на null
+        mpaRating.setName(rs.getString("rating_mpa"));
         film.setMpa(mpaRating);
-
-        // Оставляем пустые списки, жанры и режиссеры будут загружены отдельно
-        film.setGenres(new ArrayList<>());
-        film.setDirectors(new ArrayList<>());
+        film.setGenres(List.of());
 
         return film;
     }

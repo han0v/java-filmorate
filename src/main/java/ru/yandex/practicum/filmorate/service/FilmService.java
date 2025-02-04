@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -15,7 +14,6 @@ import java.util.List;
 public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
-    private final EventService eventService;
 
     public Film addFilm(Film film) {
         return filmStorage.addFilm(film);
@@ -31,53 +29,17 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         filmStorage.addLike(filmId, userId);
-
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType("LIKE")
-                .operation("ADD")
-                .entityId(filmId)
-                .build();
-
-        eventService.addEvent(event);
     }
 
     public void removeLike(Long filmId, Long userId) {
         filmStorage.removeLike(filmId, userId);
-
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType("LIKE")
-                .operation("REMOVE")
-                .entityId(filmId)
-                .build();
-
-        eventService.addEvent(event);
     }
 
-    public List<Film> getTopFilms(int count, Long genreId, Integer year) {
-        return filmStorage.getTopFilms(count, genreId, year);
+    public List<Film> getTopFilms(int count) {
+        return filmStorage.getTopFilms(count);
     }
 
     public Film getFilmById(Long filmId) {
         return filmStorage.getFilmById(filmId);
-    }
-
-    public List<Film> getFilmsByDirector(Integer directorId, String sortBy) {
-        return filmStorage.getFilmsByDirector(directorId, sortBy);
-    }
-
-    public List<Film> getCommonFilms(Long userId, Long friendId) {
-        return filmStorage.getCommonFilms(userId, friendId);
-    }
-
-    public List<Film> getSearchedFilms(String query, String[] searchWords) {
-        return filmStorage.getSearchedFilms(query, searchWords);
-    }
-
-    public void deleteFilm(Long filmId) {
-        filmStorage.deleteFilm(filmId);
     }
 }
