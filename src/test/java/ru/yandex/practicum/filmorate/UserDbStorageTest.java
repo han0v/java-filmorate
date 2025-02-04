@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
@@ -18,7 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@JdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({UserDbStorage.class, UserRowMapper.class})
@@ -86,7 +86,7 @@ class UserDbStorageTest {
 
         // Проверяем, что список не пустой и содержит добавленного пользователя
         assertThat(users).isNotEmpty();
-        assertThat(users).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(users).hasSize(1);
     }
 
     @Test
