@@ -29,16 +29,22 @@ public class ReviewService {
     }
 
     public Review updateReview(Review review) {
+        Review updatedReview = reviewStorage.updateReview(review);
+
+        if (updatedReview.getReviewId() == null) {
+            throw new IllegalStateException("Review ID is null after update.");
+        }
 
         Event event = Event.builder()
                 .timestamp(System.currentTimeMillis())
-                .userId(review.getUserId())
+                .userId(updatedReview.getUserId())
                 .eventType("REVIEW")
                 .operation("UPDATE")
-                .entityId(review.getReviewId())
+                .entityId(updatedReview.getReviewId())
                 .build();
+
         eventService.addEvent(event);
-        return reviewStorage.updateReview(review);
+        return updatedReview;
     }
 
     public void deleteReview(Long reviewId) {
