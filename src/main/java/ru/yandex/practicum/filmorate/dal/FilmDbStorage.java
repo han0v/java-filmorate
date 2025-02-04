@@ -160,7 +160,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (:filmId, :userId)";
+        String sql = "MERGE INTO film_likes (film_id, user_id) KEY(film_id, user_id) VALUES (:filmId, :userId)";
         Map<String, Object> params = new HashMap<>();
         params.put("filmId", filmId);
         params.put("userId", userId);
