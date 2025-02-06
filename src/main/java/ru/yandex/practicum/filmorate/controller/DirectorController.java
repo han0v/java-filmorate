@@ -23,7 +23,6 @@ public class DirectorController {
         return directorService.getAllDirectors();
     }
 
-
     @GetMapping("/{id}")
     public Optional<DirectorDto> getDirectorById(@PathVariable Integer id) {
         return directorService.getDirectorById(id);
