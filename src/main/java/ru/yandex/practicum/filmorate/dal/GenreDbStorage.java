@@ -9,9 +9,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class GenreDbStorage implements GenreStorage {
@@ -62,4 +60,34 @@ public class GenreDbStorage implements GenreStorage {
             return genre;
         });
     }
+
+    public Map<Long, Set<Genre>> getGenresForFilms(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String sql = "SELECT fg.film_id, g.genre_id, g.genre " +
+                "FROM film_genre fg " +
+                "JOIN genres g ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id IN (:filmIds)";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("filmIds", filmIds);
+
+        List<Map<String, Object>> rows = jdbcOperations.queryForList(sql, params);
+
+        Map<Long, Set<Genre>> filmGenresMap = new HashMap<>();
+
+        for (Map<String, Object> row : rows) {
+            Long filmId = ((Number) row.get("film_id")).longValue();
+            Genre genre = new Genre();
+            genre.setId(((Number) row.get("genre_id")).longValue());
+            genre.setName((String) row.get("genre"));
+
+            filmGenresMap.computeIfAbsent(filmId, k -> new HashSet<>()).add(genre);
+        }
+
+        return filmGenresMap;
+    }
+
 }
