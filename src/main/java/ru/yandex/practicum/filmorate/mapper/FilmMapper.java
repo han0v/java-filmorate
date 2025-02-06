@@ -3,9 +3,11 @@ package ru.yandex.practicum.filmorate.mapper;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
+import lombok.experimental.UtilityClass;
 
 import java.util.Collections;
 
+@UtilityClass
 @Slf4j
 public class FilmMapper {
 

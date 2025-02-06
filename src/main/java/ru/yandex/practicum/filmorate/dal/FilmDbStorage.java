@@ -19,7 +19,6 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("checkstyle:Regexp")
 @Slf4j
 @Qualifier("filmDbStorage")
 @Repository
@@ -117,7 +116,6 @@ public class FilmDbStorage implements FilmStorage {
                 batchValuesDirectors.add(directorParams);
             }
             log.info("Запуск пакетной вставки режиссеров для фильма с id: {}", film.getId());
-            // Выполняем пакетную вставку режиссеров
             jdbcOperations.batchUpdate(sqlInsertDirectors, batchValuesDirectors.toArray(new Map[0]));
         }
     }
@@ -128,14 +126,10 @@ public class FilmDbStorage implements FilmStorage {
                 "FROM film f " +
                 "JOIN mpa_rating mr ON f.rating_id = mr.rating_id";
         try {
-            // Получаем все фильмы
             List<Film> films = jdbcOperations.query(sql, new HashMap<>(), filmRowMapper);
-            // Получаем жанры и режиссеров для каждого фильма
             for (Film film : films) {
                 Long filmId = film.getId();
-                // Получаем жанры для каждого фильма
                 film.setGenres(genreDbStorage.getGenresForFilm(filmId));
-                // Получаем режиссеров для каждого фильма
                 String directorsSql = "SELECT d.director_id, d.name " +
                         "FROM directors d " +
                         "JOIN films_directors fd ON d.director_id = fd.director_id " +
@@ -148,7 +142,7 @@ public class FilmDbStorage implements FilmStorage {
                     director.setName(rs.getString("name"));
                     return director;
                 });
-                film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
+                film.setDirectors(directors);
             }
             return films;
         } catch (EmptyResultDataAccessException e) {
