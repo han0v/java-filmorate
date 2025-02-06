@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.SortBy;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
@@ -82,7 +83,7 @@ public class FilmController {
 
     @GetMapping("/popular")
     public ResponseEntity<List<FilmDto>> getPopularFilms(
-            @RequestParam(required = false, defaultValue = "10") int count,
+            @RequestParam(defaultValue = "10") int count,
             @RequestParam(required = false) Long genreId,
             @RequestParam(required = false) Integer year) {
         log.info("Запрос на получение {} популярных фильмов с genreId = {} и year = {}", count, genreId, year);
@@ -98,12 +99,16 @@ public class FilmController {
             @PathVariable Integer directorId,
             @RequestParam String sortBy) {
         log.info("Запрос на получение фильмов режиссера {} с сортировкой по {}", directorId, sortBy);
-        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+        String sortByString;
+        try {
+            SortBy sortByEnum = SortBy.fromString(sortBy);
+            sortByString = sortByEnum.getValue(); // Преобразуем обратно в строку
+        } catch (IllegalArgumentException e) {
             log.info("Переданы НЕДОПУСТИМЫЕ значения сортировки");
-            throw new IllegalArgumentException("Некорректный параметр sortBy. Допустимые значения: year, likes");
+            throw e;
         }
         log.info("Переданы ДОПУСТИМЫЕ значения сортировки");
-        return ResponseEntity.ok(filmService.getFilmsByDirector(directorId, sortBy));
+        return ResponseEntity.ok(filmService.getFilmsByDirector(directorId, sortByString));
     }
 
 
