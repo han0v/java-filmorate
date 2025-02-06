@@ -1,12 +1,13 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.EventRowMapper;
-import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 
 import java.sql.PreparedStatement;
@@ -15,15 +16,12 @@ import java.util.List;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class EventDbStorage implements EventStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final EventRowMapper eventRowMapper;
 
-    public EventDbStorage(JdbcTemplate jdbcTemplate, EventRowMapper eventRowMapper) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.eventRowMapper = eventRowMapper;
-    }
 
     @Override
     public void addEvent(Event event) {
@@ -36,8 +34,8 @@ public class EventDbStorage implements EventStorage {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, event.getTimestamp());
             ps.setLong(2, event.getUserId());
-            ps.setString(3, event.getEventType());
-            ps.setString(4, event.getOperation());
+            ps.setString(3, event.getEventType().toString());
+            ps.setString(4, event.getOperation().toString());
             ps.setLong(5, event.getEntityId());
             return ps;
         }, keyHolder);
