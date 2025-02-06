@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.model.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,8 @@ public class Event {
     private Long eventId;
     private Long timestamp;
     private Long userId;
-    private String eventType; // LIKE, REVIEW, FRIEND
-    private String operation; // ADD, REMOVE, UPDATE
+    private EventType eventType; // LIKE, REVIEW, FRIEND
+    private EventOperation operation; // ADD, REMOVE, UPDATE
     private Long entityId;
 }
+
