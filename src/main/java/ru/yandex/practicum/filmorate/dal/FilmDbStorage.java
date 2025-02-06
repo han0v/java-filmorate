@@ -315,7 +315,6 @@ public class FilmDbStorage implements FilmStorage {
         jdbcOperations.update(sqlDelete, params);
 
         if (genres != null && !genres.isEmpty()) {
-//            Set<Genre> uniqueGenres = new HashSet<>(genres);
             List<Genre> uniqueGenres = genres.stream()
                     .distinct()
                     .collect(Collectors.toList());
@@ -483,10 +482,6 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteFilm(Long filmId) {
         String sql = "DELETE FROM film WHERE film_id = :filmId";
-        if (jdbcOperations == null) {
-            log.error("Ошибка: jdbcOperations = NULL! Spring не смог его создать.");
-            throw new IllegalStateException("jdbcOperations не инициализирован!");
-        }
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("filmId", filmId);
         jdbcOperations.update(sql, params);
     }
