@@ -19,7 +19,6 @@ public class DirectorController {
     private final DirectorService directorService;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<DirectorDto> getAllDirectors() {
         return directorService.getAllDirectors();
     }
@@ -41,7 +40,6 @@ public class DirectorController {
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
     public void deleteDirector(@PathVariable Integer id) {
         directorService.deleteDirector(id);
     }

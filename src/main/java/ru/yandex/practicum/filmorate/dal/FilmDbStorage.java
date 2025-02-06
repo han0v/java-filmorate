@@ -206,7 +206,6 @@ public class FilmDbStorage implements FilmStorage {
                 return director;
             });
 
-            //film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
             film.setDirectors(directorDbStorage.getDirectorsForFilm(film.getId()));
             return film;
         } catch (EmptyResultDataAccessException e) {

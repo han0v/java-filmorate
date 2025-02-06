@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Slf4j
 @Component
 public class ResponseDirectorRowMapper implements RowMapper<ResponseDirector> {
     @Override

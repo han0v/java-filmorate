@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.dto.DirectorDto;
 
 @Slf4j
 @Data
-@Component //возможно не нужен
 @RequiredArgsConstructor
 public class RequestDirector {
     private Integer id;
