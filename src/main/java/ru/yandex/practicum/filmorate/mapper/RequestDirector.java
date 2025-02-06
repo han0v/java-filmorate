@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.mapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
 
 @Slf4j
