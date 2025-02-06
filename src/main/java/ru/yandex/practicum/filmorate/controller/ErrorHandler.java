@@ -72,6 +72,6 @@ public class ErrorHandler {
         log.error("Перехвачено исключение {}", e.toString());
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", "Ошибка валидации данных");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }
