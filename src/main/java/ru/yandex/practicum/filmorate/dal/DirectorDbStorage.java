@@ -20,7 +20,7 @@ import ru.yandex.practicum.filmorate.mapper.ResponseDirector;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Qualifier("directorDbStorage")
@@ -147,4 +147,34 @@ public class DirectorDbStorage implements DirectorStorage {
             return director;
         });
     }
+
+    public Map<Long, Set<Director>> getDirectorsForFilms(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String sql = "SELECT fd.film_id, d.director_id, d.name " +
+                "FROM films_directors fd " +
+                "JOIN directors d ON fd.director_id = d.director_id " +
+                "WHERE fd.film_id IN (:filmIds)";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("filmIds", filmIds);
+
+        List<Map<String, Object>> rows = jdbcOperations.queryForList(sql, params);
+
+        Map<Long, Set<Director>> filmDirectorsMap = new HashMap<>();
+
+        for (Map<String, Object> row : rows) {
+            Long filmId = ((Number) row.get("film_id")).longValue();
+            Director director = new Director();
+            director.setId(((Number) row.get("director_id")).intValue());
+            director.setName((String) row.get("name"));
+
+            filmDirectorsMap.computeIfAbsent(filmId, k -> new HashSet<>()).add(director);
+        }
+
+        return filmDirectorsMap;
+    }
+
 }

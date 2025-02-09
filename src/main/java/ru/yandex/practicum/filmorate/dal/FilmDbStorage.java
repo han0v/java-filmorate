@@ -19,7 +19,6 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("checkstyle:Regexp")
 @Slf4j
 @Qualifier("filmDbStorage")
 @Repository
@@ -117,7 +116,6 @@ public class FilmDbStorage implements FilmStorage {
                 batchValuesDirectors.add(directorParams);
             }
             log.info("Запуск пакетной вставки режиссеров для фильма с id: {}", film.getId());
-            // Выполняем пакетную вставку режиссеров
             jdbcOperations.batchUpdate(sqlInsertDirectors, batchValuesDirectors.toArray(new Map[0]));
         }
     }
@@ -128,34 +126,25 @@ public class FilmDbStorage implements FilmStorage {
                 "FROM film f " +
                 "JOIN mpa_rating mr ON f.rating_id = mr.rating_id";
         try {
-            // Получаем все фильмы
             List<Film> films = jdbcOperations.query(sql, new HashMap<>(), filmRowMapper);
-            // Получаем жанры и режиссеров для каждого фильма
+            List<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
+
+            Map<Long, Set<Genre>> filmGenresMap = genreDbStorage.getGenresForFilms(filmIds);
+            Map<Long, Set<Director>> filmDirectorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
             for (Film film : films) {
                 Long filmId = film.getId();
-                // Получаем жанры для каждого фильма
-                film.setGenres(genreDbStorage.getGenresForFilm(filmId));
-                // Получаем режиссеров для каждого фильма
-                String directorsSql = "SELECT d.director_id, d.name " +
-                        "FROM directors d " +
-                        "JOIN films_directors fd ON d.director_id = fd.director_id " +
-                        "WHERE fd.film_id = :filmId";
-                Map<String, Object> directorParams = new HashMap<>();
-                directorParams.put("filmId", filmId);
-                List<Director> directors = jdbcOperations.query(directorsSql, directorParams, (rs, rowNum) -> {
-                    Director director = new Director();
-                    director.setId(rs.getInt("director_id"));
-                    director.setName(rs.getString("name"));
-                    return director;
-                });
-                film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
+                film.setGenres(new ArrayList<>(filmGenresMap.getOrDefault(filmId, Set.of())));
+                film.setDirectors(new ArrayList<>(filmDirectorsMap.getOrDefault(filmId, Set.of())));
             }
+
             return films;
         } catch (EmptyResultDataAccessException e) {
             log.info("Фильмы не найдены");
             return Collections.emptyList();
         }
     }
+
 
 
     @Override
@@ -206,7 +195,6 @@ public class FilmDbStorage implements FilmStorage {
                 return director;
             });
 
-            //film.setDirectors(directors);  // Устанавливаем список режиссеров в объект Film
             film.setDirectors(directorDbStorage.getDirectorsForFilm(film.getId()));
             return film;
         } catch (EmptyResultDataAccessException e) {
@@ -218,15 +206,16 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopFilms(int count, Long genreId, Integer year) {
-        String sql = "SELECT f.film_id " +
+        String sql = "SELECT f.*, mr.rating_mpa, COUNT(fl.user_id) AS likes_count " +
                 "FROM film f " +
                 "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                "JOIN mpa_rating mr ON f.rating_id = mr.rating_id " +
                 (genreId != null ? "JOIN film_genre fg ON f.film_id = fg.film_id " : "") +
-                "WHERE 1=1 " + // упрощает динамическую генерацию условий
+                "WHERE 1=1 " +
                 (genreId != null ? "AND fg.genre_id = :genreId " : "") +
                 (year != null ? "AND YEAR(f.release_date) = :year " : "") +
                 "GROUP BY f.film_id " +
-                "ORDER BY COUNT(fl.user_id) DESC " +
+                "ORDER BY likes_count DESC " +
                 "LIMIT :count";
         Map<String, Object> params = new HashMap<>();
         params.put("count", count);
@@ -236,10 +225,20 @@ public class FilmDbStorage implements FilmStorage {
         if (year != null) {
             params.put("year", year);
         }
-        List<Long> topFilmIds = jdbcOperations.query(sql, params, (rs, rowNum) -> rs.getLong("film_id"));
-        return topFilmIds.stream()
-                .map(this::getFilmById)
-                .toList();
+
+        List<Film> films = jdbcOperations.query(sql, params, filmRowMapper);
+        List<Long> filmIds = films.stream().map(Film::getId).toList();
+
+        Map<Long, Set<Genre>> filmGenresMap = genreDbStorage.getGenresForFilms(filmIds);
+        Map<Long, Set<Director>> filmDirectorsMap = directorDbStorage.getDirectorsForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(new ArrayList<>(filmGenresMap.getOrDefault(film.getId(), Set.of())));
+            film.setDirectors(new ArrayList<>(filmDirectorsMap.getOrDefault(film.getId(), Set.of())));
+
+        }
+
+        return films;
 
 
     }
@@ -322,7 +321,6 @@ public class FilmDbStorage implements FilmStorage {
         jdbcOperations.update(sqlDelete, params);
 
         if (genres != null && !genres.isEmpty()) {
-//            Set<Genre> uniqueGenres = new HashSet<>(genres);
             List<Genre> uniqueGenres = genres.stream()
                     .distinct()
                     .collect(Collectors.toList());
@@ -490,10 +488,6 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteFilm(Long filmId) {
         String sql = "DELETE FROM film WHERE film_id = :filmId";
-        if (jdbcOperations == null) {
-            log.error("Ошибка: jdbcOperations = NULL! Spring не смог его создать.");
-            throw new IllegalStateException("jdbcOperations не инициализирован!");
-        }
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("filmId", filmId);
         jdbcOperations.update(sql, params);
     }

@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.event.EventOperation;
+import ru.yandex.practicum.filmorate.model.event.EventType;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
@@ -37,8 +39,8 @@ public class UserService {
         Event event = Event.builder()
                 .timestamp(System.currentTimeMillis())
                 .userId(userId)
-                .eventType("FRIEND")
-                .operation("ADD")
+                .eventType(EventType.FRIEND)
+                .operation(EventOperation.ADD)
                 .entityId(friendId)
                 .build();
         log.info("Event add entityId= " + userId);
@@ -51,8 +53,8 @@ public class UserService {
         Event event = Event.builder()
                 .timestamp(System.currentTimeMillis())
                 .userId(userId)
-                .eventType("FRIEND")
-                .operation("REMOVE")
+                .eventType(EventType.FRIEND)
+                .operation(EventOperation.REMOVE)
                 .entityId(friendId)
                 .build();
 

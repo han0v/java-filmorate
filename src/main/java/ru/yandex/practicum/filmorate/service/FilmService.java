@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.event.EventOperation;
+import ru.yandex.practicum.filmorate.model.event.EventType;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
@@ -35,8 +37,8 @@ public class FilmService {
         Event event = Event.builder()
                 .timestamp(System.currentTimeMillis())
                 .userId(userId)
-                .eventType("LIKE")
-                .operation("ADD")
+                .eventType(EventType.LIKE)
+                .operation(EventOperation.ADD)
                 .entityId(filmId)
                 .build();
 
@@ -49,8 +51,8 @@ public class FilmService {
         Event event = Event.builder()
                 .timestamp(System.currentTimeMillis())
                 .userId(userId)
-                .eventType("LIKE")
-                .operation("REMOVE")
+                .eventType(EventType.LIKE)
+                .operation(EventOperation.REMOVE)
                 .entityId(filmId)
                 .build();
 
